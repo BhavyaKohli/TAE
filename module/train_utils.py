@@ -8,14 +8,13 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 class ProgressBar():
     def __init__(self, epochs, ncols=100, verbose=1):
         self.bar = tqdm(range(1,epochs+1), ncols=ncols, disable=not verbose, 
-                        bar_format = "Epoch: {n_fmt}/{total_fmt} |{bar}| [{elapsed}<{remaining}{postfix}]")
+                        bar_format="Epoch: {n_fmt}/{total_fmt} |{bar}| [{elapsed}<{remaining}{postfix}]")
         self.bar.set_postfix_str(f"loss: -, es: -")
 
     def update(self, epoch, loss, es=None):
         post_str = f"loss: {loss:.4f}"
         post_str = post_str + f", es: {es}" if es is not None else post_str
         self.bar.set_postfix_str(post_str)
-        self.bar.set_description_str(f"Epoch {epoch}")
 
 class EarlyStopping():
     def __init__(self):
