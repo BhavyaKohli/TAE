@@ -8,17 +8,17 @@ class Autoencoder(nn.Module):
     def __init__(self, in_feature, embed, linear=True):
         super(Autoencoder, self).__init__()
         # encoder
-        self.enc1 = nn.Linear(in_features=in_feature, out_features=embed, bias=False).to(device)
+        self.enc = nn.Linear(in_features=in_feature, out_features=embed, bias=False).to(device)
         # decoder
-        self.dec1 = nn.Linear(in_features=embed, out_features=in_feature, bias=False).to(device)
+        self.dec = nn.Linear(in_features=embed, out_features=in_feature, bias=False).to(device)
         self.linear = linear
         # self.double()
 
     def forward(self, x):
-        x = self.enc1(x).to(device)
+        x = self.enc(x).to(device)
         if self.linear == False:
             x = F.relu(x).to(device)
-        x = self.dec1(x).to(device)
+        x = self.dec(x).to(device)
         return x
     
 class VAE(nn.Module):
@@ -142,7 +142,7 @@ class TensorisedAElossMod(nn.Module):
 class CNN_Autoencoder(nn.Module):
     def __init__(self,embed):
         super(CNN_Autoencoder,self).__init__()
-        self.enc1 = nn.Sequential(
+        self.enc = nn.Sequential(
             # 28 x 28
             nn.Conv2d(1, 4, kernel_size=5),
             # 4 x 24 x 24
@@ -172,6 +172,6 @@ class CNN_Autoencoder(nn.Module):
             nn.Sigmoid(),
             )
     def forward(self, x):
-        enc = self.enc1(x)
+        enc = self.enc(x)
         dec = self.decoder(enc)
         return dec
