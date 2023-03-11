@@ -1,9 +1,0 @@
-__pycache__
-.vscode/
-
-.gitignore
-
-tae_module_debugging*
-
-train.py
-train2.py
