@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cpu' if torch.cuda.is_available() else 'cpu'
 
 class ProgressBar():
     def __init__(self, epochs, ncols=100, verbose=1):
@@ -46,15 +46,15 @@ class Autoencoder(nn.Module):
         self.enc = nn.Linear(in_features, embed, bias=False)
         self.dec = nn.Linear(embed, in_features, bias=False)
     
-    def forward(self, x):
+    def forward(self, x, return_embed=False):
         embed = self.enc(x)
         recon = self.dec(embed)
-        return embed, recon
+        return (embed, recon) if return_embed else recon
 
 def train_step(model, criterion, optimizer, x, y):
     x, y = x.to(device).float(), y.to(device).float()
 
-    embed, recon = model(x)
+    recon = model(x)
     loss = criterion(recon, y)
 
     optimizer.zero_grad()
@@ -83,6 +83,6 @@ def train_ae(autoencoder, dataloader, optimizer, epochs, verbose=0, pbar_ncols=7
             )
         losses.append(np.mean(batch_losses))
         es.update(losses[-1])
-        if verbose: pbar.update(i, losses[-1], es.es)
+        if verbose: pbar.update(losses[-1], es.es)
     
     return autoencoder, losses
