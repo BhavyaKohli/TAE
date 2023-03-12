@@ -11,7 +11,7 @@ class ProgressBar():
                         bar_format="Epoch: {n_fmt}/{total_fmt} |{bar}| [{elapsed}<{remaining}{postfix}]")
         self.bar.set_postfix_str(f"loss: -, es: -")
 
-    def update(self, epoch, loss, es=None):
+    def update(self, loss, es=None):
         post_str = f"loss: {loss:.4f}"
         post_str = post_str + f", es: {es}" if es is not None else post_str
         self.bar.set_postfix_str(post_str)
