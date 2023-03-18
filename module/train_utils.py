@@ -29,10 +29,13 @@ class EarlyStopping():
             self.es = 0
             self.loss = latest_loss
 
-class DummyDataset(torch.utils.data.Dataset):
+class GenericDataset(torch.utils.data.Dataset):
     def __init__(self, X, Y):
         self.data = X
         self.targets = Y
+
+    def get_dataloader(self, batch_size, shuffle):
+        return torch.utils.data.DataLoader(self, batch_size=batch_size, shuffle=shuffle)
 
     def __getitem__(self, idx):
         return self.data[idx], self.targets[idx]
@@ -49,38 +52,32 @@ class Autoencoder(nn.Module):
     def forward(self, x, return_embed=False):
         embed = self.enc(x)
         recon = self.dec(embed)
-        return (embed, recon) if return_embed else recon
+        return (embed, recon) if return_embed else recon 
 
-def train_step(model, criterion, optimizer, x, y):
-    x, y = x.to(device).float(), y.to(device).float()
-
-    recon = model(x)
-    loss = criterion(recon, y)
-
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-
-    return loss.item()    
-
-def train_ae(autoencoder, dataloader, optimizer, epochs, verbose=0, pbar_ncols=75):
+def train_ae(autoencoder, dataloader, optimizer, epochs, verbose=0, pbar_ncols=75, early_stopping=10):
     criterion = nn.MSELoss()
+    if early_stopping is False: early_stopping = np.inf
 
     pbar = ProgressBar(epochs, ncols=pbar_ncols, verbose=verbose)
     es = EarlyStopping()
 
     losses = []
-    for i in pbar.bar:
-        if es.es >= 10: break
+    for epoch in pbar.bar:
+        if es.es >= early_stopping: break
 
         batch_losses = []
         for x, y in dataloader:
-            batch_losses.append(
-                train_step(
-                    autoencoder, criterion, optimizer,
-                    x, y
-                )
-            )
+            x, y = x.to(device).float(), y.to(device).float()
+
+            recon = autoencoder(x)
+            loss = criterion(recon, y)
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            batch_losses.append(loss.item())
+        
         losses.append(np.mean(batch_losses))
         es.update(losses[-1])
         if verbose: pbar.update(losses[-1], es.es)
