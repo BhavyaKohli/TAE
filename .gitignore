@@ -1,0 +1,12 @@
+__pycache__
+.vscode/
+
+module/tae_module*
+
+# original codes
+train.py
+train2.py
+
+reproduce_results.ipynb
+inference.ipynb
+models.py
