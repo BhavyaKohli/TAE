@@ -2,6 +2,7 @@ __pycache__
 .vscode/
 
 module/tae_module*
+data/
 
 # original codes
 train.py
