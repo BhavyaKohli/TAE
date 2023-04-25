@@ -3,8 +3,6 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-device = 'cpu' if torch.cuda.is_available() else 'cpu'
-
 class ProgressBar():
     def __init__(self, epochs, ncols=100, verbose=1):
         self.bar = tqdm(range(1,epochs+1), ncols=ncols, disable=not verbose, 
@@ -67,7 +65,7 @@ def train_ae(autoencoder, dataloader, optimizer, epochs, verbose=0, pbar_ncols=7
 
         batch_losses = []
         for x, y in dataloader:
-            x, y = x.to(device).float(), y.to(device).float()
+            x, y = x.to(autoencoder.device).float(), y.to(autoencoder.device).float()
 
             recon = autoencoder(x)
             loss = criterion(recon, y)
