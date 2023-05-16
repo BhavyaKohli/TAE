@@ -3,6 +3,7 @@ __pycache__
 
 module/tae_module*
 data/
+backups/
 
 # original codes
 train.py
