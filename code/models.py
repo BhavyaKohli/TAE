@@ -1,10 +1,10 @@
 import torch
 import torch.nn as nn
 
-class DenseBlock(nn.Module):
-    def __init__(self, in_features, out_features, bias, activation=None):
+class Block(nn.Module):
+    def __init__(self, layer_type: nn.Module, in_features, out_features, activation=None, **layer_kwargs):
         super().__init__()
-        self.layer = nn.Linear(in_features, out_features, bias)
+        self.layer = layer_type(in_features, out_features, **layer_kwargs)
         self.act = activation
 
     def forward(self, x):
@@ -13,12 +13,12 @@ class DenseBlock(nn.Module):
         
         return self.act(self.layer(x))
 
-class Autoencoder(nn.Module):
-    def __init__(self, enc_channels, dec_channels, bias, activations=nn.ReLU(), device=None):
+class BaseAutoencoder(nn.Module):
+    def __init__(self, layer_type: nn.Module, enc_channels, dec_channels, bias=True, activations=nn.ReLU(), device=None, **layer_kwargs):
         """
-        REQUIRES: device, enc_channels, dec_channels, bias, activations (nn.ReLU(), nn.GELU(), etc)
+        REQUIRES: device, enc_channels, dec_channels, activations (nn.ReLU(), nn.GELU(), etc)
         """
-        super(Autoencoder, self).__init__()
+        super().__init__()
 
         self.enc_channels, self.dec_channels = enc_channels, dec_channels
         self.bias = bias
@@ -31,11 +31,11 @@ class Autoencoder(nn.Module):
 
         self.enc = nn.Sequential()
         for i in range(len(self.enc_channels)-1):
-            self.enc.add_module(f'enc_dense{i}', DenseBlock(self.enc_channels[i], self.enc_channels[i+1], bias=self.bias, activation=self.activations).to(self.device))
+            self.enc.add_module(f'enc_dense{i}', Block(layer_type, self.enc_channels[i], self.enc_channels[i+1], bias=self.bias, activation=self.activations, **layer_kwargs).to(self.device))
 
         self.dec = nn.Sequential()
         for i in range(len(self.dec_channels)-1):
-            self.dec.add_module(f'dec_dense{i}', DenseBlock(self.dec_channels[i], self.dec_channels[i+1], bias=self.bias, activation=self.activations).to(self.device))
+            self.dec.add_module(f'dec_dense{i}', Block(layer_type, self.dec_channels[i], self.dec_channels[i+1], bias=self.bias, activation=self.activations, **layer_kwargs).to(self.device))
 
     def forward(self, x, return_embed=False):
         x = x.to(self.device).float()
@@ -47,7 +47,7 @@ class Autoencoder(nn.Module):
 
 class GroupedModel(nn.Module):
     def __init__(self, n_clusters, model_class, **kwargs):
-        super(GroupedModel, self).__init__()
+        super().__init__()
         self.n_clusters = n_clusters
 
         self.AE = nn.ModuleList(model_class(**kwargs) for i in range(n_clusters))
