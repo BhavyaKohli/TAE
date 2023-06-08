@@ -17,15 +17,14 @@ class ProgressBar():
 class EarlyStopping():
     def __init__(self):
         self.es = 0
-        self.loss = 0
+        self.minloss = 100
     
     def update(self, latest_loss):
-        if latest_loss >= self.loss:
+        if latest_loss >= self.minloss:
             self.es += 1
-            self.loss = latest_loss
         else:
             self.es = 0
-            self.loss = latest_loss
+            self.minloss = latest_loss
 
 class GenericDataset(torch.utils.data.Dataset):
     def __init__(self, X, Y):
