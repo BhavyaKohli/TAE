@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 
+from functools import partial
+
 
 class Block(nn.Module):
     def __init__(self, layer_type: nn.Module, in_features, out_features, activation=None, **layer_kwargs):
@@ -52,6 +54,10 @@ class BaseAutoencoder(nn.Module):
 
         if return_embed: return embed, out
         return out
+
+    @classmethod
+    def create_AE(cls, layer_type):
+        return partial(cls, layer_type=layer_type)
 
 
 class GroupedModel(nn.Module):

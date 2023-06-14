@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from tqdm import tqdm
+from tqdm.auto import tqdm
+from IPython.display import clear_output
 
 
 class ProgressBar:
@@ -77,7 +78,7 @@ def train_ae(autoencoder, dataloader, optimizer, epochs, verbose=0, pbar_ncols=7
 
 
 def train_tae(tae, X, Y, epochs, lr, batch_size, warmup=0.3, warmup_optim=torch.optim.Adagrad, warmup_lr=0.1,
-              verbose=True, grad_clip=5):
+              verbose=True, grad_clip=5, pbar_ncols=75):
     clust_assign = tae.assign_centers_to_data(Y, one_hot=True)
     tae.centers = tae.update_centers(Y, clust_assign)
 
@@ -87,7 +88,7 @@ def train_tae(tae, X, Y, epochs, lr, batch_size, warmup=0.3, warmup_optim=torch.
     warmup_epochs = int(warmup * epochs) if warmup <= 1 else warmup
 
     if verbose: print(f"PHASE 1: Warmup — {warmup_epochs}/{epochs}")
-    pbar_warmup = ProgressBar(warmup_epochs, 75, verbose)
+    pbar_warmup = ProgressBar(warmup_epochs, pbar_ncols, verbose)
     warmup_losses = []
     for epoch in pbar_warmup.bar:
         batch_losses = []
@@ -107,10 +108,16 @@ def train_tae(tae, X, Y, epochs, lr, batch_size, warmup=0.3, warmup_optim=torch.
 
             batch_losses.append(loss.item())
 
+
         clust_assign = new_clust_assign.clone()
         tae.centers = (tae.update_centers(Y, clust_assign) + epoch * tae.centers) / (epoch + 1)
 
         warmup_losses.append(np.mean(batch_losses))
+        if np.isnan(warmup_losses[-1]):
+            clear_output()
+            return train_tae(tae, X, Y, epochs, lr, batch_size, warmup, warmup_optim, warmup_lr,
+              verbose, grad_clip, pbar_ncols)
+
         pbar_warmup.update(warmup_losses[-1])
 
     clust_wise_data = tae.collect_data(X, Y, clust_assign)
@@ -124,7 +131,7 @@ def train_tae(tae, X, Y, epochs, lr, batch_size, warmup=0.3, warmup_optim=torch.
     for data in dataloaders:
         ae = tae.autoencoders.AE[data[0]]
         optimizer = torch.optim.Adam(ae.parameters(), lr)
-        ae, losses = train_ae(ae, data[1], optimizer, epochs=batched_epochs, verbose=verbose)
+        ae, losses = train_ae(ae, data[1], optimizer, pbar_ncols=pbar_ncols, epochs=batched_epochs, verbose=verbose)
         clust_losses.append(losses)
 
     return warmup_losses, clust_losses, clust_assign.argmax(dim=0)
