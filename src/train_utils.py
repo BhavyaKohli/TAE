@@ -3,13 +3,13 @@ import torch.nn as nn
 import numpy as np
 import copy
 
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 from IPython.display import clear_output
 
 
 class ProgressBar:
     def __init__(self, epochs, ncols=100, verbose=1):
-        self.bar = tqdm(range(1, epochs + 1), ncols=ncols, disable=not verbose,
+        self.bar = tqdm(range(1, epochs + 1), ncols=ncols, disable=not verbose, position=0,
                         bar_format="Epoch: {n_fmt}/{total_fmt} |{bar}| [{elapsed}<{remaining}{postfix}]")
         self.bar.set_postfix_str(f"loss: -, es: -")
 
@@ -117,7 +117,7 @@ def train_tae(tae, X, Y, epochs, lr, batch_size, warmup=0.3, warmup_optim=torch.
         warmup_losses.append(np.mean(batch_losses))
         if np.isnan(warmup_losses[-1]):
             clear_output()
-            torch.seed(torch.random.randint())
+            torch.manual_seed(np.random.randint(1e5))
             return train_tae(tae_orig, X, Y, epochs, lr, batch_size, warmup, warmup_optim, warmup_lr,
               verbose, grad_clip, pbar_ncols)
 
