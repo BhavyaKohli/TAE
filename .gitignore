@@ -1,7 +1,7 @@
 __pycache__
 .vscode/
 
-code/tae_module*
+tae_module*
 data/
 backups/
 

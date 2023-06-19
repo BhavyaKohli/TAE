@@ -1,8 +1,9 @@
 import torch
 import torch.nn as nn
 import numpy as np
+import copy
 
-from tqdm.auto import tqdm
+from tqdm.notebook import tqdm
 from IPython.display import clear_output
 
 
@@ -79,10 +80,11 @@ def train_ae(autoencoder, dataloader, optimizer, epochs, verbose=0, pbar_ncols=7
 
 def train_tae(tae, X, Y, epochs, lr, batch_size, warmup=0.3, warmup_optim=torch.optim.Adagrad, warmup_lr=0.1,
               verbose=True, grad_clip=5, pbar_ncols=75):
+    tae_orig = copy.deepcopy(tae)
     clust_assign = tae.assign_centers_to_data(Y, one_hot=True)
     tae.centers = tae.update_centers(Y, clust_assign)
 
-    optimizer = warmup_optim(tae.parameters(), warmup_lr)
+    optimizer = warmup_optim(tae.parameters(), warmup_lr, weight_decay=1e-5)
     warmup_dataloader = GenericDataset(X, Y).get_dataloader(batch_size=1, shuffle=False)
 
     warmup_epochs = int(warmup * epochs) if warmup <= 1 else warmup
@@ -115,7 +117,8 @@ def train_tae(tae, X, Y, epochs, lr, batch_size, warmup=0.3, warmup_optim=torch.
         warmup_losses.append(np.mean(batch_losses))
         if np.isnan(warmup_losses[-1]):
             clear_output()
-            return train_tae(tae, X, Y, epochs, lr, batch_size, warmup, warmup_optim, warmup_lr,
+            torch.seed(torch.random.randint())
+            return train_tae(tae_orig, X, Y, epochs, lr, batch_size, warmup, warmup_optim, warmup_lr,
               verbose, grad_clip, pbar_ncols)
 
         pbar_warmup.update(warmup_losses[-1])

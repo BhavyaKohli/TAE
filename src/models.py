@@ -27,7 +27,6 @@ class BaseAutoencoder(nn.Module):
 
         self.enc_channels, self.dec_channels = enc_channels, dec_channels
         self.bias = bias
-        self.activations = activations
         self.device = device or 'cpu'
 
         if self.enc_channels[-1] != self.dec_channels[0]:
@@ -39,13 +38,13 @@ class BaseAutoencoder(nn.Module):
         for i in range(len(self.enc_channels) - 1):
             self.enc.add_module(f'enc_dense{i}',
                                 Block(layer_type, self.enc_channels[i], self.enc_channels[i + 1], bias=self.bias,
-                                      activation=self.activations, **layer_kwargs).to(self.device))
+                                      activation=activations, **layer_kwargs).to(self.device))
 
         self.dec = nn.Sequential()
         for i in range(len(self.dec_channels) - 1):
             self.dec.add_module(f'dec_dense{i}',
                                 Block(layer_type, self.dec_channels[i], self.dec_channels[i + 1], bias=self.bias,
-                                      activation=self.activations, **layer_kwargs).to(self.device))
+                                      activation=activations, **layer_kwargs).to(self.device))
 
     def forward(self, x, return_embed=False):
         x = x.to(self.device).float()
